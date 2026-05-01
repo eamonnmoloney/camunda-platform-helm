@@ -139,21 +139,6 @@ on:
         required: false
         default: false
         type: boolean
-      skip-it:
-        description: "Skip integration (Playwright IT) tests for this scenario (declared in ci-test-config.yaml)"
-        required: false
-        default: false
-        type: boolean
-      pr-head-sha:
-        description: "PR HEAD commit SHA for recording cache results"
-        required: false
-        default: ""
-        type: string
-      camunda-version:
-        description: "Camunda version (e.g., 8.9) for cache result recording"
-        required: false
-        default: ""
-        type: string
       camunda-helm-post-render:
         description: Set to true if you would like to run the post-renderer script for OpenShift
         required: false

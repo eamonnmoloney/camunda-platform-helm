@@ -169,7 +169,6 @@ type CIScenario struct {
 	// When set, these prevent the corresponding test types from running for this scenario,
 	// replacing hardcoded shortname-based skip logic in both the Go CLI and GHA workflows.
 	SkipE2E bool `yaml:"skip-e2e,omitempty"`
-	SkipIT  bool `yaml:"skip-it,omitempty"`
 
 	// Dependencies specifies companion charts to deploy before the main Camunda chart.
 	// Each dependency is deployed as a separate Helm release in the same namespace.

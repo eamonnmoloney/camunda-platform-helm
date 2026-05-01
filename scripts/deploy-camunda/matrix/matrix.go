@@ -212,7 +212,6 @@ func Generate(repoRoot string, opts GenerateOptions) ([]Entry, error) {
 						Upgrade:      scenario.Upgrade,
 						Enterprise:   scenario.Enterprise,
 						SkipE2E:      scenario.SkipE2E,
-						SkipIT:       scenario.SkipIT,
 						Dependencies: scenario.Dependencies,
 						PreInstall:   scenario.PreInstall,
 						PostDeploy:   scenario.PostDeploy,

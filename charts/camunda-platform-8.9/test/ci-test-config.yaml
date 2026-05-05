@@ -439,7 +439,7 @@ integration:
           platforms: [gke]
         - name: qa-document-store-upg
           enabled: false
-          flow: install
+          flow: install,modular-upgrade-minor
           shortname: qadocupg
           auth: keycloak
           identity: keycloak

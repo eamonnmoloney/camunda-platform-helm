@@ -30,7 +30,7 @@ integration:
           identity: keycloak
           persistence: elasticsearch
           flow: install
-          skip-e2e: true  # 8.7 web-modeler-restapi has a known unresponsiveness bug
+          skip-e2e: true  # 8.7 Tasklist can't display Zeebe user tasks (empty flowNodes in process definition)
           infra-type:
             gke: distroci
             eks: preemptible
@@ -44,7 +44,7 @@ integration:
           identity: keycloak
           persistence: elasticsearch
           flow: install,upgrade-patch
-          skip-e2e: true  # 8.7 web-modeler-restapi has a known unresponsiveness bug
+          skip-e2e: true  # 8.7 Tasklist can't display Zeebe user tasks (empty flowNodes in process definition)
           infra-type:
             gke: distroci
             eks: preemptible
@@ -58,7 +58,7 @@ integration:
           identity: keycloak
           persistence: elasticsearch
           flow: install
-          skip-e2e: true  # 8.7 web-modeler-restapi has a known unresponsiveness bug
+          skip-e2e: true  # 8.7 Tasklist can't display Zeebe user tasks (empty flowNodes in process definition)
           infra-type:
             gke: distroci
           platforms: [gke]
@@ -70,7 +70,7 @@ integration:
           auth: oidc
           persistence: elasticsearch
           flow: install,upgrade-patch
-          skip-e2e: true  # 8.7 web-modeler-restapi bug + OIDC incompatible with Keycloak-dependent smoke tests
+          skip-e2e: true  # 8.7 Tasklist can't display Zeebe user tasks + OIDC incompatible with Keycloak-dependent smoke tests
           skip-it: true   # OIDC ITs require Entra setup that returns 401
           infra-type:
             gke: distroci
@@ -83,7 +83,7 @@ integration:
           exclude: []
           auth: keycloak
           flow: install,upgrade-patch
-          skip-e2e: true  # 8.7 web-modeler-restapi has a known unresponsiveness bug
+          skip-e2e: true  # 8.7 Tasklist can't display Zeebe user tasks (empty flowNodes in process definition)
           infra-type:
             gke: distroci
             eks: preemptible
@@ -97,7 +97,7 @@ integration:
           exclude: []
           auth: keycloak
           identity: keycloak
-          skip-e2e: true  # 8.7 web-modeler-restapi has a known unresponsiveness bug
+          skip-e2e: true  # 8.7 Tasklist can't display Zeebe user tasks (empty flowNodes in process definition)
           persistence: opensearch-external
           flow: install
           infra-type:
@@ -110,6 +110,7 @@ integration:
           exclude: []
           auth: keycloak
           identity: keycloak
+          skip-e2e: true  # 8.7 Tasklist can't display Zeebe user tasks (empty flowNodes in process definition)
           persistence: opensearch-embedded
           flow: install
           infra-type:

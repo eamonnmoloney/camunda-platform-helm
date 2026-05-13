@@ -45,7 +45,6 @@ func TestGoldenDefaultsTemplateConsole(t *testing.T) {
 			SetValues: map[string]string{
 				"console.enabled":                "true",
 				"identity.enabled":               "true",
-				"identityKeycloak.enabled":       "true",
 				"console.serviceAccount.enabled": "true",
 			},
 			IgnoredLines: []string{

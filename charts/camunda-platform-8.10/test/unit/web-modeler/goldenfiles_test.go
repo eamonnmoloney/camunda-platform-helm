@@ -50,15 +50,11 @@ func TestGoldenDefaultsTemplateWebModeler(t *testing.T) {
 			SetValues: map[string]string{
 				"webModeler.enabled":                                               "true",
 				"webModeler.restapi.mail.fromAddress":                              "example@example.com",
-				"webModelerPostgresql.enabled":                                     "true",
-				"webModelerPostgresql.auth.existingSecret":                         "camunda-platform-test-postgresql-web-modeler",
 				"connectors.security.authentication.oidc.secret.existingSecret":    "foo",
 				"orchestration.security.authentication.oidc.secret.existingSecret": "foo",
 				"global.identity.auth.enabled":                                     "true",
 				"identity.enabled":                                                 "true",
-				"identityKeycloak.enabled":                                         "true",
 				"global.elasticsearch.enabled":                                     "true",
-				"elasticsearch.enabled":                                            "true",
 			},
 			IgnoredLines: []string{
 				`\s+.*-secret:\s+.*`,    // secrets are auto-generated and need to be ignored.

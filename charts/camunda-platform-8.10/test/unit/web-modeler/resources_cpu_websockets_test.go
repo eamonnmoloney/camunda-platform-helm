@@ -56,7 +56,6 @@ func (s *WebsocketsResourcesCPUTemplateTest) TestCPUResourcesAsString() {
 		SetValues: map[string]string{
 			"webModeler.enabled":                              "true",
 			"identity.enabled":                                "true",
-			"elasticsearch.enabled":                           "true",
 			"global.elasticsearch.enabled":                    "true",
 			"webModeler.restapi.mail.fromAddress":             "test@example.com",
 			"webModeler.websockets.resources.requests.cpu":    "50m",
@@ -96,7 +95,6 @@ func (s *WebsocketsResourcesCPUTemplateTest) TestCPUResourcesBackwardCompatibili
 		SetValues: map[string]string{
 			"webModeler.enabled":                              "true",
 			"identity.enabled":                                "true",
-			"elasticsearch.enabled":                           "true",
 			"global.elasticsearch.enabled":                    "true",
 			"webModeler.restapi.mail.fromAddress":             "test@example.com",
 			"webModeler.websockets.resources.requests.cpu":    "100m",

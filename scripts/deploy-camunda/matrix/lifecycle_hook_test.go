@@ -35,12 +35,16 @@ import (
 //	create-elasticsearch-tls-secrets.sh — helper sourced by
 //	                                 pre-install-elasticsearch-self-signed*.sh,
 //	                                 never invoked by the runner directly.
+//	create-opensearch-tls-secrets.sh — helper sourced by
+//	                                 pre-install-opensearch-self-signed*.sh,
+//	                                 never invoked by the runner directly.
 //	create-rdbms-tls-secrets.sh     — helper sourced by
 //	                                 pre-install-rdbms-self-signed.sh,
 //	                                 never invoked by the runner directly.
 var preSetupScriptAllowlist = map[string]bool{
 	"pre-install-upgrade.sh":              true,
 	"create-elasticsearch-tls-secrets.sh": true,
+	"create-opensearch-tls-secrets.sh":    true,
 	"create-rdbms-tls-secrets.sh":         true,
 }
 

@@ -338,22 +338,10 @@ integration:
         - name: hub-legacy
           enabled: true
           auth: keycloak
-          shortname: huble
+          shortname: hublu
           tier: 2
           exclude: []
-          flow: install
-          identity: keycloak
-          persistence: elasticsearch
-          features: [hub-legacy]
-          platforms: [gke]
-          infra-type:
-            gke: distroci
-        - name: hub-legacy
-          enabled: false
-          auth: keycloak
-          shortname: hublu
-          exclude: []
-          flow: upgrade-minor
+          flow: install,upgrade-minor
           identity: keycloak
           persistence: elasticsearch
           features: [hub-legacy]
@@ -362,9 +350,10 @@ integration:
             gke: distroci
             eks: preemptible
         - name: hub-mixed
-          enabled: false
+          enabled: true
           auth: keycloak
           shortname: hubmu
+          tier: 2
           exclude: []
           flow: upgrade-minor
           identity: keycloak

@@ -363,6 +363,21 @@ integration:
           infra-type:
             gke: distroci
             eks: preemptible
+        - name: hub-webmodeler-only
+          enabled: true
+          auth: keycloak
+          shortname: hubwo
+          tier: 2
+          exclude: []
+          flow: upgrade-minor
+          identity: keycloak
+          persistence: elasticsearch-external
+          features: [hub-webmodeler-only]
+          platforms: [gke]
+          infra-type:
+            gke: distroci
+            eks: preemptible
+        # Used by camunda/connectors FEATURE_BRANCH_HELM_TEST workflow (main/8.10).
         - name: keycloak-original
           enabled: true
           flow: install

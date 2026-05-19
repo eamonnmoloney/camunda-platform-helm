@@ -361,7 +361,7 @@ integration:
         - name: hub-legacy
           enabled: true
           auth: keycloak
-          shortname: huble
+          shortname: hublu
           tier: 2
           exclude: []
           flow: install
@@ -384,27 +384,28 @@ integration:
             gke: distroci
           skip-e2e: true  # Standard smoke tests skipped; full suite runs via c8e2e distributed runner
         - name: hub-legacy
-          enabled: false
+          enabled: true
           auth: keycloak
           shortname: hublu
           exclude: []
           flow: upgrade-minor
           identity: keycloak
           persistence: elasticsearch
-          features: [hub-legacy]
+          features: [hub-legacy,migrator]
           platforms: [gke]
           infra-type:
             gke: distroci
             eks: preemptible
         - name: hub-mixed
-          enabled: false
+          enabled: true
           auth: keycloak
           shortname: hubmu
+          tier: 2
           exclude: []
           flow: upgrade-minor
           identity: keycloak
           persistence: elasticsearch-external
-          features: [hub-mixed]
+          features: [hub-mixed,migrator]
           platforms: [gke]
           infra-type:
             gke: distroci

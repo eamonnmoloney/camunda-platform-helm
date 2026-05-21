@@ -52,8 +52,23 @@ Non-Camunda images:
 
 {{ .chart_images_non_camunda }}
 {{- if .chart_images_enterprise }}
+{{- /*
+  Per-version Bitnami Enterprise guide URL:
+  - 8.6 lives on unsupported.docs.camunda.io with the legacy path.
+  - 8.7 keeps the legacy /setup/guides/ path on the main docs site.
+  - 8.8+ uses the new /deployment/helm/configure/registry-and-images/ path.
+  See https://github.com/camunda/camunda-platform-helm/issues/6217.
+*/ -}}
+{{- $bitnamiURL := "" -}}
+{{- if eq .app_version "8.6" -}}
+{{- $bitnamiURL = printf "https://unsupported.docs.camunda.io/%s/docs/self-managed/setup/guides/install-bitnami-enterprise-images/" .app_version -}}
+{{- else if eq .app_version "8.7" -}}
+{{- $bitnamiURL = printf "https://docs.camunda.io/docs/%s/self-managed/setup/guides/install-bitnami-enterprise-images/" .app_version -}}
+{{- else -}}
+{{- $bitnamiURL = printf "https://docs.camunda.io/docs/%s/self-managed/deployment/helm/configure/registry-and-images/install-bitnami-enterprise-images/" .app_version -}}
+{{- end }}
 
-Enterprise images ([Camunda Enterprise](https://docs.camunda.io/docs/self-managed/deployment/helm/configure/registry-and-images/install-bitnami-enterprise-images/)):
+Enterprise images ([Camunda Enterprise]({{ $bitnamiURL }})):
 
 {{ .chart_images_enterprise }}
 {{- end }}

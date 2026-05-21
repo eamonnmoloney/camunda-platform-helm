@@ -53,7 +53,7 @@ Non-Camunda images:
 {{ .chart_images_non_camunda }}
 {{- if .chart_images_enterprise }}
 
-Enterprise images ([Camunda Enterprise](https://docs.camunda.io/docs/self-managed/setup/guides/install-bitnami-enterprise-images/)):
+Enterprise images ([Camunda Enterprise](https://docs.camunda.io/docs/self-managed/deployment/helm/configure/registry-and-images/install-bitnami-enterprise-images/)):
 
 {{ .chart_images_enterprise }}
 {{- end }}

@@ -103,7 +103,7 @@ func RunTests(ctx context.Context, flags *config.RuntimeFlags, namespace string)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			output, err := runE2ETests(testCtx, repoRoot, chartPath, namespace, flags.Test.KubeContext, flags.Test.TestExclude, flags.Selection.Persistence, flags.E2EOutputWriter)
+			output, err := runE2ETests(testCtx, repoRoot, chartPath, namespace, flags.Test.KubeContext, flags.Test.TestExclude, flags.Selection.Persistence, flags.Test.RunAllTests, flags.E2EOutputWriter)
 			resultCh <- TestResult{Type: "e2e", Error: err, Output: output}
 		}()
 	}
@@ -144,7 +144,7 @@ func RunTests(ctx context.Context, flags *config.RuntimeFlags, namespace string)
 }
 
 // runE2ETests executes the e2e test script.
-func runE2ETests(ctx context.Context, repoRoot, chartPath, namespace, kubeContext, testExclude, persistence string, outputSink io.Writer) (string, error) {
+func runE2ETests(ctx context.Context, repoRoot, chartPath, namespace, kubeContext, testExclude, persistence string, runAll bool, outputSink io.Writer) (string, error) {
 	scriptPath := filepath.Join(repoRoot, "scripts", "run-e2e-tests.sh")
 
 	if _, err := os.Stat(scriptPath); err != nil {
@@ -157,12 +157,18 @@ func runE2ETests(ctx context.Context, repoRoot, chartPath, namespace, kubeContex
 		Str("namespace", namespace).
 		Str("kubeContext", kubeContext).
 		Str("persistence", persistence).
+		Bool("runAll", runAll).
 		Msg("Running e2e tests")
 
 	args := []string{
 		"--absolute-chart-path", chartPath,
 		"--namespace", namespace,
-		"--run-smoke-tests",
+	}
+
+	// Only add --run-smoke-tests when RunAllTests is false.
+	// When RunAllTests is true, we want to run the full suite (omit --run-smoke-tests).
+	if !runAll {
+		args = append(args, "--run-smoke-tests")
 	}
 
 	if kubeContext != "" {

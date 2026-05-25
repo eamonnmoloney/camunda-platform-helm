@@ -1605,11 +1605,11 @@ func executeEntry(ctx context.Context, entry Entry, opts RunOptions, entryIndex 
 			KubeContext: kubeCtx,
 			TestExclude: testExclude,
 			RunE2ETests: (opts.TestE2E || opts.TestAll) && !entry.SkipE2E,
-			// Do NOT propagate RunAllTests here — RunE2ETests already encodes
-			// the full decision (including skip-e2e from ci-test-config.yaml).
-			// Setting RunAllTests would bypass the skip logic in deploy/test.go
-			// which ORs RunAllTests with RunE2ETests.
-			RunAllTests: false,
+			// Propagate the dedicated "all e2e tests" intent while still honoring
+			// skip-e2e from ci-test-config.yaml. Both RunAllTests and RunE2ETests
+			// respect the skip check, so skipped entries remain skipped even though
+			// RunAllTests gets set when opts.TestAll is true.
+			RunAllTests: opts.TestAll && !entry.SkipE2E,
 		},
 		// Selection + Composition: pass explicit layer overrides from ci-test-config.yaml.
 		// When set, these override MapScenarioToConfig name-based derivation in deploy.go.

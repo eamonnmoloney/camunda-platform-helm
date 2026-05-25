@@ -385,6 +385,7 @@ func dryRun(entries []Entry, opts RunOptions) []RunResult {
 				QA:          entry.QA || opts.UseQA,
 				ImageTags:   entry.ImageTags,
 				Upgrade:     entry.Upgrade,
+				ChartDir:    scenarioDir,
 			})
 			if buildErr != nil {
 				results = append(results, RunResult{
@@ -713,6 +714,7 @@ func coverageReport(entries []Entry, opts RunOptions) []RunResult {
 				QA:          entry.QA || opts.UseQA,
 				ImageTags:   entry.ImageTags,
 				Upgrade:     entry.Upgrade,
+				ChartDir:    filepath.Join(entry.ChartPath, "test/integration/scenarios/chart-full-setup"),
 			})
 			if buildErr != nil {
 				results = append(results, RunResult{

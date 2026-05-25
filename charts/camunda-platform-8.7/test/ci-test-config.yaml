@@ -214,10 +214,48 @@ integration:
               session idle timeout to 2 hours. Prevents session-expiry flakiness
               in long-running E2E test flows (diagram building, process deployment)
               when the cluster is under heavy load.
+        # Mirrors the shortname used by the 8.8 upgrade-minor nightly install leg.
+        - name: qa-elasticsearch
+          enabled: false
+          flow: install
+          shortname: qaelupg
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
+          post-deploy:
+            script: post-deploy-keycloak-token-lifespan.sh
+            description: |
+              Increases Keycloak access token lifespan to 30 minutes and SSO
+              session idle timeout to 2 hours for E2E test stability.
         - name: qa-elasticsearch-rba
           enabled: false
           flow: install
           shortname: qarba
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          features: [rba]
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
+          post-deploy:
+            script: post-deploy-keycloak-token-lifespan.sh
+            description: |
+              Increases Keycloak access token lifespan to 30 minutes and SSO
+              session idle timeout to 2 hours for E2E test stability.
+        # Mirrors 8.8+ shortname for the qa-elasticsearch-rba scenario; cross-component
+        # nightly playwright_sm_nightly_rba_8_7.yml passes shortname=qaelrba.
+        - name: qa-elasticsearch-rba
+          enabled: false
+          flow: install
+          shortname: qaelrba
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -250,6 +288,38 @@ integration:
             description: |
               Increases Keycloak access token lifespan to 30 minutes and SSO
               session idle timeout to 2 hours for E2E test stability.
+        # Mirrors 8.8+ shortname for the qa-elasticsearch-mt scenario; cross-component
+        # nightly playwright_sm_nightly_mt_8_7.yml passes shortname=qaelmt.
+        - name: qa-elasticsearch-mt
+          enabled: false
+          flow: install
+          shortname: qaelmt
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          features: [multitenancy]
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
+          post-deploy:
+            script: post-deploy-keycloak-token-lifespan.sh
+            description: |
+              Increases Keycloak access token lifespan to 30 minutes and SSO
+              session idle timeout to 2 hours for E2E test stability.
+        # Keeps 8.7 document-store deployable via deploy-camunda matrix run.
+        - name: qa-document-store
+          enabled: false
+          flow: install
+          shortname: qadoc
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          features: [documentstore]
+          qa: true
+          image-tags: true
+          platforms: [gke, eks]
         - name: qa-license
           enabled: false
           flow: install

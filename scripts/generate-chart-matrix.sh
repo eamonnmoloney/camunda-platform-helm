@@ -127,10 +127,8 @@ write_matrix_entry() {
   if [ -f "$chart_dir/test/ci-test-config.yaml" ]; then
     camunda_version_previous="$(echo "$camunda_version" | awk -F. '{printf "%d.%d", $1, $2-1}')"
     local config_file="${REPO_ROOT}/.github/config/permitted-flows.yaml"
-    declare -A used_shortnames=()
 
-    readarray prScenarios < <(yq e -o=j -I=0 '.integration.case.pr.scenario.[]' $chart_dir/test/ci-test-config.yaml)
-    for prScenario in "${prScenarios[@]}"; do
+    while IFS= read -r prScenario; do
       enabled=$(echo "$prScenario" | yq e '.enabled' -)
       if [ "$enabled" = "false" ]; then
         continue
@@ -164,9 +162,9 @@ write_matrix_entry() {
           flow_trimmed="install"
         fi
         case "$flow_trimmed" in
-          install | upgrade-patch | upgrade-minor) ;;
+          install | upgrade-patch | upgrade-minor | modular-upgrade-minor) ;;
           *)
-            echo "❌ Invalid flow '$flow_trimmed'. Valid flows: install, upgrade-patch, upgrade-minor. We do have a flow called modular-upgrade-minor.. however this can only be called directly on integration-test-template.yaml." >&2
+            echo "❌ Invalid flow '$flow_trimmed'. Valid flows: install, upgrade-patch, upgrade-minor, modular-upgrade-minor." >&2
             exit 1
             ;;
         esac
@@ -181,17 +179,6 @@ write_matrix_entry() {
         # Filter flows according to YAML config rules (fallback to legacy rules if config absent)
         if ! is_flow_permitted "$flow_trimmed" "$camunda_version" "$config_file"; then
           continue
-        fi
-        base_shortname=$(echo "$prScenario" | yq e -r '.shortname' -)
-        flow_slug=$(echo "$flow_trimmed" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-\+//;s/-\+$//')
-        shortname="${base_shortname}-${flow_slug}"
-        if [[ -v used_shortnames[$shortname] ]]; then
-          count=${used_shortnames[$shortname]}
-          count=$((count + 1))
-          used_shortnames[$shortname]=$count
-          shortname="${shortname}-${count}"
-        else
-          used_shortnames[$shortname]=1
         fi
         echo "  - version: \"${camunda_version}\"" >> matrix_versions.txt
         echo "    camundaVersionPrevious: \"$(echo "$camunda_version_previous")\"" >> matrix_versions.txt
@@ -233,7 +220,7 @@ write_matrix_entry() {
         helm_version=$(echo "$prScenario" | yq e -r '.helmVersion // ""' -)
         echo "    helmVersion: \"${helm_version}\"" >> matrix_versions.txt
       done
-    done
+    done < <(yq e -o=j -I=0 '.integration.case.pr.scenario.[]' "$chart_dir/test/ci-test-config.yaml")
     sed -i -e '$s/,$/]\n/' matrix_versions.txt
   fi
 }

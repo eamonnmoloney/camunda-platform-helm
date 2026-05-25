@@ -153,6 +153,18 @@ get_first_version() {
   assert_output '["install","upgrade-patch"]'
 }
 
+@test "manual flow accepts modular-upgrade-minor" {
+  v="$(printf "%s\n" $AV | grep '^8\.10$' || get_first_version)"
+  run bash "$ROOT/scripts/generate-chart-matrix.sh" \
+    --manual-trigger "$v" \
+    --active-versions "$AV" \
+    --manual-flow "modular-upgrade-minor"
+  assert_success
+  run bash -c 'yq -o=json ".matrix | [.[] | .flow] | unique | sort" matrix_versions.txt | jq -c'
+  assert_success
+  assert_output '["modular-upgrade-minor"]'
+}
+
 @test "invalid manual flow causes failure" {
   v="$(get_first_version)"
   run bash "$ROOT/scripts/generate-chart-matrix.sh" \
@@ -237,4 +249,3 @@ get_first_version() {
   # Only install should remain for keycloak-mt when manual flow includes upgrade-patch
   assert_output '["install"]'
 }
-

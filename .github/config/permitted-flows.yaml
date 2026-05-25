@@ -3,6 +3,7 @@ defaults:
     - install
     - upgrade-patch
     - upgrade-minor
+    - modular-upgrade-minor
 rules:
   - match: "<=8.7"
     deny:
@@ -10,5 +11,4 @@ rules:
   - match: "==8.10"
     deny:
       - upgrade-patch
-
 

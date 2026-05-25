@@ -245,9 +245,9 @@ integration:
         #  sm_manual_upgrade_minor_8_8). All disabled so they don't appear in the regular
         # CI matrix; matrix run resolves them via --shortname-filter + --include-disabled.
         #
-        # Note on duplicate shortnames: compat workflow reuses qaosupg/qaelmtupg across
-        # tasklist-v1 install scenarios and *-upg upgrade-minor scenarios. Both deploy
-        # via the same flow=install path here. One entry per shortname covers both.
+        # Note on duplicate shortnames: cross-component workflows pass both scenario
+        # and shortname, so disabled nightly rows intentionally mirror those exact
+        # pairs even when another disabled row uses the same shortname+flow.
         # ===========================================================================
         # Used by camunda/connectors FEATURE_BRANCH_HELM_TEST workflow (stable/8.8).
         - name: keycloak-original
@@ -310,10 +310,42 @@ integration:
           platforms: [gke]
           infra-type:
             gke: qa-workloads
+        - name: qa-elasticsearch
+          enabled: false
+          flow: install
+          shortname: qaelupg
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-opensearch
           enabled: false
           flow: install
           shortname: qaos
+          auth: keycloak
+          identity: keycloak
+          persistence: opensearch-embedded
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
+          dependencies:
+            - chart: opensearch/opensearch
+              version: "2.31.0"
+              release-name: opensearch
+              repo-name: opensearch
+              repo-url: https://opensearch-project.github.io/helm-charts/
+              values-file: test/integration/companion-values/opensearch.yaml
+        - name: qa-opensearch
+          enabled: false
+          flow: install
+          shortname: qaosupg
+          prefix-key: qa-opensearch-upg
           auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
@@ -346,6 +378,19 @@ integration:
           enabled: false
           flow: install
           shortname: qaelmt
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          features: [multitenancy]
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
+        - name: qa-elasticsearch-mt
+          enabled: false
+          flow: install
+          shortname: qaelmtupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -394,6 +439,19 @@ integration:
           infra-type:
             gke: qa-workloads
             eks: preemptible
+        - name: qa-document-store
+          enabled: false
+          flow: install
+          shortname: qadocupg
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          features: [documentstore]
+          qa: true
+          image-tags: true
+          platforms: [eks]
+          infra-type:
+            eks: preemptible
         - name: qa-document-store-upg
           enabled: false
           flow: install
@@ -410,7 +468,7 @@ integration:
         - name: qa-elasticsearch-tasklist-v1
           enabled: false
           flow: install
-          shortname: qaeltlv1
+          shortname: qaelupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -521,7 +579,8 @@ integration:
         - name: qa-opensearch-upg
           enabled: false
           flow: install
-          shortname: qaosupg2
+          shortname: qaosupg
+          prefix-key: qa-opensearch-upg
           auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
@@ -540,7 +599,7 @@ integration:
         - name: qa-elasticsearch-rba-upg
           enabled: false
           flow: install
-          shortname: qaelrbaup2
+          shortname: qaelrbaupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -553,7 +612,7 @@ integration:
         - name: qa-elasticsearch-mt-upg
           enabled: false
           flow: install
-          shortname: qaelmtup2
+          shortname: qaelmtupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -566,7 +625,7 @@ integration:
         - name: qa-license-upg
           enabled: false
           flow: install
-          shortname: licup2
+          shortname: licupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch

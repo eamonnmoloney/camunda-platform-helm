@@ -488,9 +488,10 @@ integration:
               repo-url: https://opensearch-project.github.io/helm-charts/
               values-file: test/integration/companion-values/opensearch.yaml
         - name: qa-opensearch-upg
-          enabled: false
+          enabled: true
           flow: modular-upgrade-minor
           shortname: qaosupg
+          prefix-key: qa-opensearch-upg
           auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
@@ -533,7 +534,7 @@ integration:
           infra-type:
             gke: qa-workloads
         - name: qa-elasticsearch-mt-upg
-          enabled: false
+          enabled: true
           flow: modular-upgrade-minor
           shortname: qaelmtupg
           auth: keycloak
@@ -574,7 +575,7 @@ integration:
             eks: preemptible
         - name: qa-document-store-upg
           enabled: false
-          flow: install,modular-upgrade-minor
+          flow: install
           shortname: qadocupg
           auth: keycloak
           identity: keycloak
@@ -587,7 +588,7 @@ integration:
             gke: qa-workloads
             eks: preemptible
         - name: qa-document-store-upg
-          enabled: false
+          enabled: true
           flow: modular-upgrade-minor
           shortname: qadocupg
           auth: keycloak

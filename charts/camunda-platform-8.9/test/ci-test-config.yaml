@@ -289,20 +289,9 @@ integration:
         # All disabled so they don't appear in the regular CI matrix; matrix run resolves
         # them via --shortname-filter + --include-disabled.
         #
-        # Note on duplicate shortnames: matrix lookup is keyed by (shortname, flow), so
-        # the same shortname can appear on multiple rows when each row carries a distinct
-        # flow. Specifically:
-        #   - qaosupg / qaelmtupg are reused by the compat workflow across tasklist-v1
-        #     install scenarios and *-upg upgrade-minor scenarios. The compat workflow
-        #     uses flow=install for both (modular-upgrade-minor requires real infra it
-        #     doesn't provision), so for compat purposes one flow=install entry per
-        #     shortname is enough.
-        #   - The OpenSearch nightly upgrade-minor workflow additionally needs a
-        #     (qaosupg, flow=modular-upgrade-minor) row pointing at qa-opensearch-upg;
-        #     that row coexists with the compat entry because (shortname, flow) differs.
-        # When adding new dual-purpose shortnames, keep one row per (shortname, flow)
-        # pair and use shortname suffixes (e.g. qaosupg2) only when both rows would
-        # otherwise share the same flow.
+        # Note on duplicate shortnames: cross-component workflows pass both scenario
+        # and shortname, so disabled nightly rows intentionally mirror those exact
+        # pairs even when another disabled row uses the same shortname+flow.
         # ===========================================================================
         - name: keycloak-original
           enabled: true
@@ -340,10 +329,42 @@ integration:
           platforms: [gke]
           infra-type:
             gke: qa-workloads
+        - name: qa-elasticsearch
+          enabled: false
+          flow: install
+          shortname: qaelupg
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-opensearch
           enabled: false
           flow: install
           shortname: qaos
+          auth: keycloak
+          identity: keycloak
+          persistence: opensearch-embedded
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
+          dependencies:
+            - chart: opensearch/opensearch
+              version: "3.6.0"
+              release-name: opensearch
+              repo-name: opensearch
+              repo-url: https://opensearch-project.github.io/helm-charts/
+              values-file: test/integration/companion-values/opensearch.yaml
+        - name: qa-opensearch
+          enabled: false
+          flow: install
+          shortname: qaosupg
+          prefix-key: qa-opensearch-upg
           auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
@@ -376,6 +397,19 @@ integration:
           enabled: false
           flow: install
           shortname: qaelmt
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          features: [multitenancy]
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
+        - name: qa-elasticsearch-mt
+          enabled: false
+          flow: install
+          shortname: qaelmtupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -424,10 +458,23 @@ integration:
           infra-type:
             gke: qa-workloads
             eks: preemptible
+        - name: qa-document-store
+          enabled: false
+          flow: install
+          shortname: qadocupg
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          features: [documentstore]
+          qa: true
+          image-tags: true
+          platforms: [eks]
+          infra-type:
+            eks: preemptible
         - name: qa-elasticsearch-tasklist-v1
           enabled: false
           flow: install
-          shortname: qaeltlv1
+          shortname: qaelupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -536,7 +583,8 @@ integration:
         - name: qa-opensearch-upg
           enabled: false
           flow: install
-          shortname: qaosupg2
+          shortname: qaosupg
+          prefix-key: qa-opensearch-upg
           auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
@@ -553,7 +601,7 @@ integration:
               repo-url: https://opensearch-project.github.io/helm-charts/
               values-file: test/integration/companion-values/opensearch.yaml
         - name: qa-opensearch-upg
-          enabled: false
+          enabled: true
           flow: modular-upgrade-minor
           shortname: qaosupg
           prefix-key: qa-opensearch-upg
@@ -575,7 +623,7 @@ integration:
         - name: qa-elasticsearch-rba-upg
           enabled: false
           flow: install
-          shortname: qaelrbaup2
+          shortname: qaelrbaupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -588,7 +636,7 @@ integration:
         - name: qa-elasticsearch-mt-upg
           enabled: false
           flow: install
-          shortname: qaelmtup2
+          shortname: qaelmtupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -614,7 +662,7 @@ integration:
         - name: qa-license-upg
           enabled: false
           flow: install
-          shortname: licup2
+          shortname: licupg
           auth: keycloak
           identity: keycloak
           persistence: elasticsearch
@@ -626,7 +674,7 @@ integration:
             gke: qa-workloads
         - name: qa-document-store-upg
           enabled: false
-          flow: install,modular-upgrade-minor
+          flow: install
           shortname: qadocupg
           auth: keycloak
           identity: keycloak
@@ -639,7 +687,7 @@ integration:
             gke: qa-workloads
             eks: preemptible
         - name: qa-document-store-upg
-          enabled: false
+          enabled: true
           flow: modular-upgrade-minor
           shortname: qadocupg
           auth: keycloak

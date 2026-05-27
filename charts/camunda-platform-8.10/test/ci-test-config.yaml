@@ -24,7 +24,7 @@ unit:
 #      identity: keycloak        # Explicit: keycloak, keycloak-external, oidc, basic, hybrid
 #      persistence: elasticsearch # Explicit: elasticsearch, opensearch, rdbms, rdbms-oracle
 #      platform: gke             # Explicit: gke, eks, openshift
-#      features: [multitenancy]  # Explicit: multitenancy, rba, documentstore
+#      features: [multitenancy]  # Explicit: any filename (without .yaml) from test/integration/scenarios/chart-full-setup/values/features/
 #      qa: true                  # Enable QA config
 #      upgrade: false            # Enable upgrade flow config
 #
@@ -60,35 +60,25 @@ integration:
           identity: keycloak
           persistence: elasticsearch
           platforms: [gke]  # EKS removed: external ES connectivity issues cause Zeebe pods to never become ready on EKS
+        - name: enterprise-values
+          enabled: true
+          shortname: entv
+          tier: 2
+          auth: keycloak
+          flow: install
+          exclude: []
+          infra-type:
+            gke: distroci
+          identity: keycloak
+          persistence: elasticsearch
+          features: [enterprise]  # symlink: values/features/enterprise.yaml -> values-enterprise.yaml
+          platforms: [gke]
         - name: opensearch
-          enabled: false  # Disabled: Bitnami OpenSearch subchart is unstable in CI; tracked in #6121
+          enabled: true
           auth: keycloak
           shortname: oske
           tier: 2
           exclude: []
-          identity: keycloak
-          persistence: opensearch
-          infra-type:
-            gke: distroci
-          platforms: [gke]
-        - name: opensearch-external
-          enabled: false  # Disabled: external AWS OpenSearch tests are unstable; tracked in #6119
-          shortname: osex
-          tier: 2
-          exclude: []
-          auth: keycloak
-          identity: keycloak
-          persistence: opensearch-external
-          flow: install
-          infra-type:
-            gke: distroci
-          platforms: [gke]
-        - name: opensearch-embedded
-          enabled: true
-          shortname: osem
-          tier: 2
-          exclude: []
-          auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
           flow: install
@@ -102,6 +92,18 @@ integration:
               repo-name: opensearch
               repo-url: https://opensearch-project.github.io/helm-charts/
               values-file: test/integration/companion-values/opensearch.yaml
+        - name: opensearch-external
+          enabled: false  # Disabled: external AWS OpenSearch tests are unstable; tracked in #6119
+          shortname: osex
+          tier: 2
+          exclude: []
+          auth: keycloak
+          identity: keycloak
+          persistence: opensearch-external
+          flow: install
+          infra-type:
+            gke: distroci
+          platforms: [gke]
         - name: upgrade-migration
           # upgrade migrators are only for 8.7 -> 8.8, not for 8.10
           enabled: false
@@ -135,6 +137,26 @@ integration:
             gke: distroci
             eks: preemptible
           identity: oidc
+          persistence: elasticsearch
+          platforms: [gke]
+        - name: auth0
+          # Auth0 OIDC scenario. The matrix runner provisions per-component
+          # first-party clients via the Management API at runtime
+          # (auth0.IsAuth0Identity in scripts/deploy-camunda/matrix/runner.go).
+          # Playwright runs the auth0-smoke project (sourced from
+          # @camunda/e2e-test-suite/dist/tests/auth0) rather than the
+          # Keycloak-coupled smoke-tests project — see
+          # scripts/base_playwright_script.sh. Tenant prerequisites are
+          # documented at the top of values/identity/auth0.yaml.
+          enabled: true
+          exclude: [identity,console,orchestration-grpc]
+          shortname: esa0
+          auth: oidc
+          flow: install
+          infra-type:
+            gke: distroci
+            eks: preemptible
+          identity: auth0
           persistence: elasticsearch
           platforms: [gke]
         - name: keycloak-mt
@@ -255,6 +277,8 @@ integration:
           persistence: no-elasticsearch
           features: [no-secondary-storage]
           platforms: [gke]
+          infra-type:
+            gke: distroci
         - name: documentstore
           enabled: true
           exclude: []
@@ -265,6 +289,33 @@ integration:
           persistence: elasticsearch
           features: [documentstore]
           platforms: [eks]
+          infra-type:
+            eks: preemptible
+        - name: rdbms-self-signed
+          enabled: true
+          shortname: rdbss
+          tier: 2
+          exclude: []
+          auth: keycloak
+          identity: keycloak
+          persistence: rdbms-self-signed
+          flow: install
+          infra-type:
+            gke: distroci
+          platforms: [gke]
+          pre-install:
+            script: pre-install-rdbms-self-signed.sh
+            description: |
+              Generates a self-signed CA plus server certificate via openssl
+              and creates the rdbms-tls-server and rdbms-tls-ca Secrets
+              consumed by the Bitnami PostgreSQL companion chart's TLS config.
+          dependencies:
+            - chart: bitnami/postgresql
+              version: "18.6.2"
+              release-name: postgres-tls
+              repo-name: bitnami
+              repo-url: https://charts.bitnami.com/bitnami
+              values-file: test/integration/companion-values/postgresql-tls.yaml
         - name: rdbms-external
           enabled: false
           auth: keycloak
@@ -318,6 +369,20 @@ integration:
           persistence: elasticsearch
           features: [hub-legacy]
           platforms: [gke]
+          infra-type:
+            gke: distroci
+        - name: shadow-e2e
+          enabled: true
+          shortname: shde2
+          tier: 2
+          auth: keycloak
+          flow: install
+          identity: keycloak
+          persistence: elasticsearch
+          platforms: [gke]
+          infra-type:
+            gke: distroci
+          skip-e2e: true  # Standard smoke tests skipped; full suite runs via c8e2e distributed runner
         - name: hub-legacy
           enabled: false
           auth: keycloak
@@ -325,7 +390,7 @@ integration:
           exclude: []
           flow: upgrade-minor
           identity: keycloak
-          persistence: elasticsearch-external
+          persistence: elasticsearch
           features: [hub-legacy]
           platforms: [gke]
           infra-type:
@@ -344,12 +409,27 @@ integration:
           infra-type:
             gke: distroci
             eks: preemptible
-        # Used by camunda/connectors FEATURE_BRANCH_HELM_TEST workflow (main/8.10).
         - name: keycloak-original
           enabled: true
           flow: install
           shortname: keyco
+          tier: 1
           auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          platforms: [gke]
+          infra-type:
+            gke: distroci
+        # AlwaysGreen scenario — referenced by camunda/camunda's
+        # docker-build-helm-integration.yml. Deploys onto dedicated alwaysgreen
+        # GKE node pool (workload=alwaysgreen label + NoSchedule taint).
+        - name: alwaysgreen
+          enabled: false
+          flow: install
+          shortname: agrn
+          auth: keycloak
+          infra-type:
+            gke: alwaysgreen
           identity: keycloak
           persistence: elasticsearch
           platforms: [gke]
@@ -363,6 +443,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-upg
           enabled: false
           flow: modular-upgrade-minor
@@ -373,6 +455,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch
           enabled: false
           flow: install
@@ -383,6 +467,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-opensearch
           enabled: false
           flow: install
@@ -393,6 +479,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
           dependencies:
             - chart: opensearch/opensearch
               version: "3.6.0"
@@ -404,12 +492,15 @@ integration:
           enabled: false
           flow: install
           shortname: qaosupg
+          prefix-key: qa-opensearch-upg
           auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
           dependencies:
             - chart: opensearch/opensearch
               version: "3.6.0"
@@ -421,12 +512,15 @@ integration:
           enabled: false
           flow: modular-upgrade-minor
           shortname: qaosupg
+          prefix-key: qa-opensearch-upg
           auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
           dependencies:
             - chart: opensearch/opensearch
               version: "3.6.0"
@@ -445,6 +539,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-mt-upg
           enabled: false
           flow: install
@@ -456,6 +552,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-mt-upg
           enabled: false
           flow: modular-upgrade-minor
@@ -467,6 +565,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-rba
           enabled: false
           flow: install
@@ -478,6 +578,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-document-store
           enabled: false
           flow: install
@@ -489,9 +591,12 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke, eks]
+          infra-type:
+            gke: qa-workloads
+            eks: preemptible
         - name: qa-document-store-upg
           enabled: false
-          flow: install
+          flow: install,modular-upgrade-minor
           shortname: qadocupg
           auth: keycloak
           identity: keycloak
@@ -500,6 +605,9 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke, eks]
+          infra-type:
+            gke: qa-workloads
+            eks: preemptible
         - name: qa-document-store-upg
           enabled: false
           flow: modular-upgrade-minor
@@ -511,6 +619,9 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke, eks]
+          infra-type:
+            gke: qa-workloads
+            eks: preemptible
         - name: qa-license
           enabled: false
           flow: install
@@ -522,59 +633,5 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
-    nightly:
-      scenario:
-        - name: elasticsearch
-          enabled: true
-          exclude: []
-          shortname: eskey
-          auth: keycloak
-          # The following integration tests need to be exluded when basic-auth is enabled.
-        - name: elasticsearch-basic
-          enabled: true
-          auth: basic
-          shortname: esba
-          exclude: [identity,console,orchestration-grpc]
-          # deployment should work but integration tests are not passing
-        - name: elasticsearch-oidc
-          enabled: false
-          exclude: []
-          shortname: esoi
-          auth: oidc
-        - name: multitenancy
-          enabled: true
-          shortname: mtke
-          exclude: []
-          auth: keycloak
-          # not supported
-        - name: opensearch
-          enabled: false
-          exclude: []
-          shortname: oske
-          auth: keycloak
-        - name: opensearch
-          enabled: true
-          shortname: osba
-          exclude: [identity,console,orchestration-grpc]
-          auth: basic
-        - name: identity-migration
-          enabled: true
-          exclude: []
-          shortname: idmike
-          auth: keycloak
-        - name: elasticsearch
-          enabled: true
-          exclude: []
-          auth: basic
-          shortname: elbae
-          enterprise: true
-        - name: documentstore
-          enabled: false
-          exclude: []
-          shortname: docstr
-          auth: keycloak
-        - name: keycloak-external-mimic
-          enabled: true
-          exclude: []
-          shortname: kcextm
-          auth: keycloak
+          infra-type:
+            gke: qa-workloads

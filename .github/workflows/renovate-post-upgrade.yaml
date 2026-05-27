@@ -14,6 +14,10 @@ on:
       - '**/go.mod'
       - '**/go.sum'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -25,7 +29,7 @@ jobs:
       id-token: write
     steps:
       - name: Import Vault secrets for Harbor
-        uses: hashicorp/vault-action@4c06c5ccf5c0761b6029f56cfb1dcf5565918a3b # v3.4.0
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
         id: vault-harbor
         with:
           url: ${{ secrets.VAULT_ADDR }}
@@ -112,10 +116,18 @@ jobs:
           else
             make helm.readme-update
           fi
+      - name: Update Schema
+        run: |
+          if [ -n "${CHANGED_CHARTS}" ]; then
+            chartPath="${CHANGED_CHARTS}" \
+              make helm.schema-update
+          else
+            make helm.schema-update
+          fi
       - name: Git pull
         run: git pull --rebase --autostash .
       - uses: EndBug/add-and-commit@290ea2c423ad77ca9c62ae0f5b224379612c0321 # v10.0.0
         with:
           author_name: "renovate[bot]"
           author_email: "29139614+renovate[bot]@users.noreply.github.com"
-          message: "chore(deps): post upgrade tasks - go mod tidy and update golden files"
+          message: "chore(deps): post upgrade tasks - go mod tidy, update golden files, readme, and schema"

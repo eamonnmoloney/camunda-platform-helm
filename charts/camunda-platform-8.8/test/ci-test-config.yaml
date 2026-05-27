@@ -60,6 +60,20 @@ integration:
           identity: keycloak
           persistence: elasticsearch
           platforms: [gke]  # EKS removed: Playwright ITs and E2E consistently fail on EKS for 8.8 eske
+        - name: enterprise-values
+          enabled: true
+          shortname: entv
+          tier: 2
+          auth: keycloak
+          flow: install
+          exclude: []
+          helmVersion: 3.20.2
+          infra-type:
+            gke: distroci
+          identity: keycloak
+          persistence: elasticsearch
+          features: [enterprise]  # symlink: values/features/enterprise.yaml -> values-enterprise.yaml
+          platforms: [gke]
         - name: upgrade-migration
           enabled: false
           flow: upgrade-minor
@@ -193,19 +207,25 @@ integration:
           features: [arm]
           persistence: elasticsearch-external
         - name: opensearch
-          enabled: false  # Disabled: Bitnami OpenSearch subchart is unstable in CI; tracked in #6121
+          enabled: true
           exclude: []
           shortname: oske
           tier: 2
           auth: keycloak
           identity: keycloak
-          persistence: opensearch
-          qa: false
+          persistence: opensearch-embedded
           flow: install
+          helmVersion: 3.20.2
           infra-type:
             gke: distroci
           platforms: [gke]
-          helmVersion: 3.20.2
+          dependencies:
+            - chart: opensearch/opensearch
+              version: "2.31.0"
+              release-name: opensearch
+              repo-name: opensearch
+              repo-url: https://opensearch-project.github.io/helm-charts/
+              values-file: test/integration/companion-values/opensearch.yaml
         - name: opensearch-external
           enabled: false  # Disabled: external AWS OpenSearch tests are unstable; tracked in #6119
           shortname: osex
@@ -219,25 +239,6 @@ integration:
           infra-type:
             gke: distroci
           platforms: [gke]
-        - name: opensearch-embedded
-          enabled: true
-          shortname: osem
-          tier: 2
-          exclude: []
-          auth: keycloak
-          identity: keycloak
-          persistence: opensearch-embedded
-          flow: install
-          infra-type:
-            gke: distroci
-          platforms: [gke]
-          dependencies:
-            - chart: opensearch/opensearch
-              version: "2.31.0"
-              release-name: opensearch
-              repo-name: opensearch
-              repo-url: https://opensearch-project.github.io/helm-charts/
-              values-file: test/integration/companion-values/opensearch.yaml
         - name: documentstore
           enabled: true
           exclude: []
@@ -249,6 +250,8 @@ integration:
           persistence: elasticsearch
           features: [documentstore]
           platforms: [eks]
+          infra-type:
+            eks: preemptible
 
         # ===========================================================================
         # Backward-compat scenarios — referenced by .github/workflows/test-backward-compat.yaml
@@ -265,7 +268,23 @@ integration:
           enabled: true
           flow: install
           shortname: keyco
+          tier: 1
           auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          platforms: [gke]
+          infra-type:
+            gke: distroci
+        # AlwaysGreen scenario — referenced by camunda/camunda's
+        # docker-build-helm-integration.yml. Deploys onto dedicated alwaysgreen
+        # GKE node pool (workload=alwaysgreen label + NoSchedule taint).
+        - name: alwaysgreen
+          enabled: false
+          flow: install
+          shortname: agrn
+          auth: keycloak
+          infra-type:
+            gke: alwaysgreen
           identity: keycloak
           persistence: elasticsearch
           platforms: [gke]
@@ -279,6 +298,8 @@ integration:
           identity: keycloak
           persistence: elasticsearch
           platforms: [gke]
+          infra-type:
+            gke: distroci
         # `es` is the test-integration-template default shortname; used by the
         # compat-camunda-simple job (camunda/camunda-helm-integration.yml).
         - name: elasticsearch
@@ -289,6 +310,8 @@ integration:
           identity: keycloak
           persistence: elasticsearch
           platforms: [gke]
+          infra-type:
+            gke: distroci
         - name: qa-elasticsearch
           enabled: false
           flow: install
@@ -299,6 +322,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-opensearch
           enabled: false
           flow: install
@@ -309,6 +334,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
           dependencies:
             - chart: opensearch/opensearch
               version: "2.31.0"
@@ -327,6 +354,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-mt
           enabled: false
           flow: install
@@ -338,6 +367,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-license
           enabled: false
           flow: install
@@ -349,6 +380,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-entra
           enabled: false
           flow: install
@@ -359,6 +392,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-document-store
           enabled: false
           flow: install
@@ -370,6 +405,22 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke, eks]
+          infra-type:
+            gke: qa-workloads
+            eks: preemptible
+        - name: qa-document-store-upg
+          enabled: false
+          flow: install
+          shortname: qadocupg
+          auth: keycloak
+          identity: keycloak
+          persistence: elasticsearch
+          features: [documentstore]
+          qa: true
+          image-tags: true
+          platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-tasklist-v1
           enabled: false
           flow: install
@@ -381,10 +432,13 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-opensearch-tasklist-v1
           enabled: false
           flow: install
           shortname: qaosupg
+          prefix-key: qa-opensearch-upg
           auth: keycloak
           identity: keycloak
           persistence: opensearch-embedded
@@ -392,6 +446,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
           dependencies:
             - chart: opensearch/opensearch
               version: "2.31.0"
@@ -410,6 +466,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-mt-tasklist-v1
           enabled: false
           flow: install
@@ -421,6 +479,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-license-tasklist-v1
           enabled: false
           flow: install
@@ -432,6 +492,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-upg
           enabled: false
           flow: install
@@ -442,6 +504,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-upg
           enabled: false
           flow: modular-upgrade-minor
@@ -453,6 +517,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-document-upg
           enabled: false
           flow: install
@@ -464,6 +530,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-opensearch-upg
           enabled: false
           flow: install
@@ -474,6 +542,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
           dependencies:
             - chart: opensearch/opensearch
               version: "2.31.0"
@@ -492,6 +562,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-elasticsearch-mt-upg
           enabled: false
           flow: install
@@ -503,6 +575,8 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
+          infra-type:
+            gke: qa-workloads
         - name: qa-license-upg
           enabled: false
           flow: install
@@ -514,84 +588,5 @@ integration:
           qa: true
           image-tags: true
           platforms: [gke]
-    nightly:
-      scenario:
-        - name: elasticsearch
-          enabled: true
-          exclude: []
-          shortname: eskey
-          auth: keycloak
-          helmVersion: 3.20.2
-          # The following integration tests need to be exluded when basic-auth is enabled.
-        - name: elasticsearch-basic
-          enabled: true
-          auth: basic
-          helmVersion: 3.20.2
-          shortname: esba
-          identity: basic
-          persistence: elasticsearch
-          exclude: [identity,console,orchestration-grpc]
-          # deployment should work but integration tests are not passing
-        - name: elasticsearch-oidc
-          enabled: false
-          exclude: []
-          shortname: esoi
-          auth: oidc
-          helmVersion: 3.20.2
-          identity: oidc
-          persistence: elasticsearch
-        - name: multitenancy
-          enabled: true
-          shortname: mtke
-          exclude: []
-          auth: keycloak
-          helmVersion: 3.20.2
-          identity: keycloak-external
-          persistence: elasticsearch
-          features: [multitenancy]
-          # not supported
-        - name: opensearch
-          enabled: true
-          exclude: []
-          shortname: oske
-          auth: keycloak
-          helmVersion: 3.20.2
-          identity: keycloak
-          persistence: opensearch
-          flow: install
-        - name: opensearch
-          enabled: true
-          shortname: osba
-          exclude: [identity,console,orchestration-grpc]
-          auth: basic
-          helmVersion: 3.20.2
-          identity: basic
-          persistence: opensearch
-        - name: identity-migration
-          enabled: true
-          exclude: []
-          shortname: idmike
-          auth: keycloak
-          helmVersion: 3.20.2
-        - name: elasticsearch
-          enabled: true
-          exclude: []
-          auth: basic
-          helmVersion: 3.20.2
-          shortname: elbae
-          enterprise: true
-        - name: documentstore
-          enabled: false
-          exclude: []
-          shortname: docstr
-          auth: keycloak
-          helmVersion: 3.20.2
-          identity: keycloak
-          persistence: elasticsearch
-          features: [documentstore]
-        - name: keycloak-external-mimic
-          enabled: true
-          exclude: []
-          shortname: kcextm
-          auth: keycloak
-          helmVersion: 3.20.2
+          infra-type:
+            gke: qa-workloads

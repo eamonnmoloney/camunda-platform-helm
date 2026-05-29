@@ -1,7 +1,7 @@
 {{- if .Values.webModeler.enabled -}}
 {{- $deploymentStrategy := .Values.webModeler.persistence.deploymentStrategy | default "RollingUpdate" -}}
 {{- if not (has $deploymentStrategy (list "RollingUpdate" "Recreate")) -}}
-{{- fail "webModeler.persistence.deploymentStrategy must be one of: RollingUpdate, Recreate" -}}
+{{- fail "webModeler.persistence.deploymentStrategy value must be one of 'RollingUpdate', 'Recreate'" -}}
 {{- end -}}
 apiVersion: apps/v1
 kind: Deployment

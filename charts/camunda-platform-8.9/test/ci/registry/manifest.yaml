@@ -12,6 +12,17 @@ integration:
           StatefulSet + PVC before the patch upgrade. Required because the
           target chart's PostgreSQL spec has immutable diffs vs the prior
           patch (PSQL 15→14 rollback path) — Helm cannot reconcile in place.
+    upgrade-minor:
+      pre-upgrade:
+        script: pre-upgrade-minor.sh
+        description: |
+          Clears the stale spec.strategy.rollingUpdate field from the Web Modeler
+          restapi Deployment before a minor upgrade. The previously released chart
+          renders strategy.type=RollingUpdate (API-server-defaulted rollingUpdate);
+          when the target chart sets webModeler.persistence.deploymentStrategy=Recreate
+          (component-persistence scenario), server-side apply cannot remove the
+          defaulted field and Kubernetes rejects the upgrade. No-op for RollingUpdate
+          scenarios and when Web Modeler is not deployed.
   scenarios:
     - id: elasticsearch
       shortname: eske
